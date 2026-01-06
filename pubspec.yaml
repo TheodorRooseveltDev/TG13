@@ -67,7 +67,14 @@ dependencies:
   shared_preferences: ^2.2.2
   path_provider: ^2.1.1
   uuid: ^4.2.1
+  url_launcher: ^6.2.1
   flutter_inappwebview: ^6.0.0
+  flutter_meta_sdk: ^1.0.5
+  app_tracking_transparency: ^2.0.5
+  http: ^1.2.0
+  appsflyer_sdk: ^6.13.2
+  onesignal_flutter: ^5.1.8
+  advertising_id: ^2.7.1
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:big_boss_fishing/core/theme/app_colors.dart';
 import 'package:big_boss_fishing/core/theme/text_styles.dart';
 import 'package:big_boss_fishing/core/constants/app_constants.dart';
@@ -98,18 +102,123 @@ class _AddCatchScreenState extends State<AddCatchScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1920,
-      maxHeight: 1080,
-      imageQuality: 85,
+    // Show native iOS action sheet to choose between camera and gallery
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text('Add Photo'),
+        message: const Text('Choose how you want to add a photo of your catch'),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImageFromSource(ImageSource.camera);
+            },
+            child: const Text('Take Photo'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImageFromSource(ImageSource.gallery);
+            },
+            child: const Text('Choose from Library'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+      ),
     );
+  }
 
-    if (image != null) {
-      setState(() {
-        _photoPath = image.path;
-      });
+  Future<void> _pickImageFromSource(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      // image_picker will automatically trigger native iOS permission dialog
+      // when Info.plist contains the required permission keys
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null && mounted) {
+        setState(() {
+          _photoPath = image.path;
+        });
+      }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+
+      // Handle permission denied or other platform errors
+      if (e.code == 'camera_access_denied' || e.code == 'photo_access_denied') {
+        _showPermissionDeniedDialog(source);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not access ${source == ImageSource.camera ? 'camera' : 'photo library'}',
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not access ${source == ImageSource.camera ? 'camera' : 'photo library'}',
+            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _showPermissionDeniedDialog(ImageSource source) {
+    final isCamera = source == ImageSource.camera;
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title: Text(isCamera ? 'Camera Access Denied' : 'Photos Access Denied'),
+        content: Text(
+          'To add photos of your catches, please allow access to your ${isCamera ? 'camera' : 'photo library'} in Settings.',
+        ),
+        actions: <CupertinoDialogAction>[
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              // Open app settings on iOS
+              _openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openAppSettings() async {
+    // Use app-settings URL scheme to open iOS Settings for this app
+    final uri = Uri.parse('app-settings:');
+    try {
+      await launchUrl(uri);
+    } catch (e) {
+      // Fallback: just close the dialog, user can manually open Settings
+      debugPrint('Could not open settings: $e');
     }
   }
 
@@ -423,8 +532,8 @@ class _AddCatchScreenState extends State<AddCatchScreen> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      _photoPath!,
+                    Image.file(
+                      File(_photoPath!),
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Column(

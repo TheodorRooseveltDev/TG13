@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:big_boss_fishing/core/theme/app_colors.dart';
 import 'package:big_boss_fishing/core/theme/text_styles.dart';
-import 'package:big_boss_fishing/core/constants/app_constants.dart';
-import 'package:big_boss_fishing/providers/app_state_provider.dart';
-import 'package:big_boss_fishing/app/routes.dart';
 import 'package:big_boss_fishing/presentation/screens/webview/webview_screen.dart';
 
 /// Splash Screen - Big Boss Fishing
@@ -18,39 +14,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _navigateToNext();
-  }
-
-  Future<void> _navigateToNext() async {
-    // Wait for app state to load
-    final appState = context.read<AppStateProvider>();
-    
-    // Ensure state is loaded before checking firstLaunch
-    if (appState.isLoading) {
-      await Future.doWhile(() async {
-        await Future.delayed(const Duration(milliseconds: 100));
-        return appState.isLoading;
-      });
-    }
-    
-    // Wait for splash duration
-    await Future.delayed(AppConstants.splashDuration);
-    
-    if (!mounted) return;
-    
-    // Check if first launch
-    final shouldShowOnboarding = appState.firstLaunch;
-    
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed(
-        shouldShowOnboarding ? AppRoutes.onboarding : AppRoutes.home,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

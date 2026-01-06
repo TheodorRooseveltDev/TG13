@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
@@ -552,8 +553,8 @@ class _CatchListItem extends StatelessWidget {
                   child: catchModel.photoPath != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            catchModel.photoPath!,
+                          child: Image.file(
+                            File(catchModel.photoPath!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return const Icon(

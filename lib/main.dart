@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app/app.dart';
+import 'app_crash_data/app_crash_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,11 +14,15 @@ void main() async {
     ),
   );
   
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
   
-  runApp(const BigBossFishingApp());
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: AppCrashData(),
+  ));
 }

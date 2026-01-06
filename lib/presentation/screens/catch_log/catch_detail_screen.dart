@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
@@ -138,8 +139,8 @@ class CatchDetailScreen extends StatelessWidget {
           children: [
             // Photo or placeholder
             if (catchModel.photoPath != null)
-              Image.asset(
-                catchModel.photoPath!,
+              Image.file(
+                File(catchModel.photoPath!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return _buildPhotoPlaceholder();
