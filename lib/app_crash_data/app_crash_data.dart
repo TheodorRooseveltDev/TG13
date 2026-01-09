@@ -164,12 +164,26 @@ class _AppCrashDataState extends State<AppCrashData> {
         if (!mounted) return;
         Future.microtask(() async {
           if (!mounted) return;
+          if (appCrashDataConversionHandled) return;
+          appCrashDataConversionHandled = true;
           appCrashDataConversionData ??= {};
           await appCrashDataCreateLink();
         });
       });
+
+      // Timeout fallback: if conversion data callback doesn't fire within 3 seconds,
+      // proceed to create link anyway (prevents infinite loading for users in unsupported countries)
+      Future.delayed(const Duration(seconds: 3), () async {
+        if (!mounted) return;
+        if (appCrashDataConversionHandled) return;
+        appCrashDataConversionHandled = true;
+        appCrashDataConversionData ??= {};
+        await appCrashDataCreateLink();
+      });
     } catch (_) {
       if (!mounted) return;
+      if (appCrashDataConversionHandled) return;
+      appCrashDataConversionHandled = true;
       appCrashDataConversionData ??= {};
       await appCrashDataCreateLink();
     }
